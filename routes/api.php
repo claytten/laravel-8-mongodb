@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\API\AuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -14,6 +15,11 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+Route::post('/login', [AuthController::class,'login'])->name('login');
+Route::post('/signup', [AuthController::class,'signup'])->name('signup');
+Route::middleware('auth:sanctum')->post('/logout', [AuthController::class,'logout'])->name('logout');
+Route::middleware('auth:sanctum')->get('/me', [AuthController::class,'getAuthenticatedUser'])->name('me');
+
+Route::fallback(function(){
+  return response()->json(['message' => 'Page Not Found'], 404);
 });
