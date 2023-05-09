@@ -28,9 +28,9 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::resource('kendaraan', KendaraanController::class)->only(['index', 'store', 'show']);
   });
 
-  Route::group(['prefix' => 'penjualan'], function () {
-    Route::post("/store", [PenjualanController::class, 'store'])->name('kendaraan.store');
-  });
+  // Route::group(['prefix' => 'penjualan'], function () {
+  //   Route::post("/store", [PenjualanController::class, 'store'])->name('kendaraan.store');
+  // });
 });
 
 Route::fallback(function(){

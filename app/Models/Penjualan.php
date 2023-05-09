@@ -5,10 +5,11 @@ namespace App\Models;
 use App\Enums\PenjualanStatusEnum;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Jenssegers\Mongodb\Eloquent\Model;
+use Jenssegers\Mongodb\Eloquent\SoftDeletes;
 
 class Penjualan extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     /**
      * The database table used by the model.
@@ -24,6 +25,7 @@ class Penjualan extends Model
      */
     protected $fillable = [
         'kendaraan_id',
+        'pemilik',
         'nama_pembeli',
         'alamat_pembeli',
         'harga_jual',

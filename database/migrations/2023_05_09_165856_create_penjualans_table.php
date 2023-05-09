@@ -16,10 +16,12 @@ class CreatePenjualansTable extends Migration
         Schema::create('penjualans', function (Blueprint $table) {
             $table->id();
             $table->foreignId('kendaraan_id')->constrained('kendaraans');
+            $table->string('pemilik');
             $table->integer('harga_jual');
-            $table->string('nama_pembeli');
-            $table->text('alamat_pembeli');
+            $table->string('nama_pembeli')->nullable();
+            $table->text('alamat_pembeli')->nullable();
             $table->enum('status', ['available', 'sold'])->default('available');
+            $table->softDeletes();
             $table->timestamps();
         });
     }
