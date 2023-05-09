@@ -34,7 +34,7 @@ jobs:
       run: php artisan route:clear && php artisan cache:clear && php artisan config:clear
     - name: Run tests
       run: |
-        ./vendor/bin/phpunit --verbose --colors=always --stderr
+        vendor/bin/phpunit tests/
       env:
         DB_CONNECTION: mongodb
         DB_HOST: 127.0.0.1
