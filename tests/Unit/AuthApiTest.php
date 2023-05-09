@@ -22,6 +22,7 @@ class AuthApiTest extends TestCase
             'email' => 'john@example.com',
             'password' => 'password',
             'confirm_password' => 'password',
+            'address' => '123 Main St.',
         ]);
 
         $response->assertStatus(201);
@@ -87,6 +88,7 @@ class AuthApiTest extends TestCase
             'name' => 'John Doe',
             'email' => 'john@example.com',
             'password' => bcrypt('password'),
+            'address' => '123 Main St.',
         ]);
         Auth::login($user);
 
