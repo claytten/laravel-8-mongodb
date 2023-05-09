@@ -62,7 +62,7 @@ class AuthController extends Controller
 				'success' => true,
 				'data'    => $success,
 				'message' => 'User created successfully.',
-			], 200);
+			], 201);
 		}
 
     // Sign 
@@ -72,7 +72,7 @@ class AuthController extends Controller
 				'success' => true,
 				'data'    => null,
 				'message' => 'User created successfully.',
-			], 200);
+			], 204);
 		}
 
     // Me
