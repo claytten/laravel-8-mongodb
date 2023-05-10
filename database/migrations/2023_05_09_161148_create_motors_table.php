@@ -19,6 +19,7 @@ class CreateMotorsTable extends Migration
             $table->string('suspensi', 20);
             $table->string('transmisi', 20);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

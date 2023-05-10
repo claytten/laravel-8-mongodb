@@ -25,12 +25,13 @@ Route::middleware('auth:sanctum')->get('/me', [AuthController::class,'getAuthent
 
 Route::group(['middleware' => ['auth:sanctum']], function () {
   Route::group(['prefix' => 'kendaraan'], function () {
-    Route::resource('kendaraan', KendaraanController::class)->only(['index', 'store', 'show']);
+    Route::get("/index", [KendaraanController::class, 'index'])->name('index');
+    Route::post("/store", [KendaraanController::class, 'store'])->name('store');
+    Route::put("/update/{id}", [KendaraanController::class, 'update'])->name('update');
+    Route::get("/show/{id}", [KendaraanController::class, 'show'])->name('show');
+    Route::delete("/delete/{id}", [KendaraanController::class, 'destroy'])->name('destroy');
+    Route::get("/report/{start}/{end}", [KendaraanController::class, 'report'])->name('report');
   });
-
-  // Route::group(['prefix' => 'penjualan'], function () {
-  //   Route::post("/store", [PenjualanController::class, 'store'])->name('kendaraan.store');
-  // });
 });
 
 Route::fallback(function(){

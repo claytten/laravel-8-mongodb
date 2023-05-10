@@ -4,17 +4,18 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Jenssegers\Mongodb\Eloquent\Model;
+use Jenssegers\Mongodb\Eloquent\SoftDeletes;
 
 class Motor extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     /**
      * The database table used by the model.
      *
      * @var string
      */
-    protected $table = 'mobils';
+    protected $table = 'motors';
 
     /**
      * The attributes that are mass assignable.

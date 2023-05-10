@@ -19,6 +19,7 @@ class CreateMobilsTable extends Migration
             $table->unsignedTinyInteger('kapasitas_penumpang');
             $table->string('tipe', 20);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

@@ -2,7 +2,7 @@
   
 namespace App\Enums;
  
-enum PenjualanStatusEnum:string {
+enum KendaraanStatusEnum:string {
   case Available = 'available';
   case Sold = 'sold';
 }

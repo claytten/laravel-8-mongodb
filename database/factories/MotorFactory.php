@@ -32,6 +32,7 @@ class MotorFactory extends Factory
                 'tahun_keluaran' => $this->faker->numberBetween(2010, 2023),
                 'warna' => $this->faker->safeColorName,
                 'harga' => $this->faker->numberBetween(5000000, 100000000),
+                'status' => $this->faker->randomElement(['available', 'sold']),
             ]);
         });
     }
