@@ -19,7 +19,7 @@ class CreateKendaraansTable extends Migration
             $table->string('warna', 20);
             $table->unsignedBigInteger('harga');
             $table->morphs('kendaraanable');
-            $table->enum("status", ['available', 'sold'])->default('available');
+            $table->string("status");
             $table->timestamps();
             $table->softDeletes();
         });

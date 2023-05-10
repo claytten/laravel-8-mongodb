@@ -27,7 +27,8 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
   Route::group(['prefix' => 'kendaraan'], function () {
     Route::get("/index", [KendaraanController::class, 'index'])->name('index');
     Route::post("/store", [KendaraanController::class, 'store'])->name('store');
-    Route::put("/update/{id}", [KendaraanController::class, 'update'])->name('update');
+    Route::put("/update/product/{id}", [KendaraanController::class, 'updateKendaraan'])->name('updateKendaraan');
+    Route::put("/update/status/{id}", [KendaraanController::class, 'updateStatus'])->name('updateStatus');
     Route::get("/show/{id}", [KendaraanController::class, 'show'])->name('show');
     Route::delete("/delete/{id}", [KendaraanController::class, 'destroy'])->name('destroy');
     Route::get("/report/{start}/{end}", [KendaraanController::class, 'report'])->name('report');

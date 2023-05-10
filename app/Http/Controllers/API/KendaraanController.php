@@ -7,6 +7,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Kendaraan;
 use App\Models\Mobil;
 use App\Models\Motor;
+use Carbon\Carbon;
+use DateTime;
 use Illuminate\Http\Request;
 
 class KendaraanController extends Controller
@@ -23,110 +25,116 @@ class KendaraanController extends Controller
 
     public function store(Request $request)
     {
-        $rule = [
-            'tahun_keluaran' => ['required', 'numeric'],
-            'warna' => ['required', 'string', 'max:255'],
-            'harga' => ['required', 'numeric'],
-            'type_request' => ['required', 'in:mobil,motor']
-        ];
+        $validatedKendaraan = $request->validate([
+            'tahun_keluaran' => 'required|numeric',
+            'warna' => 'required|string|max:255',
+            'harga' => 'required|numeric',
+        ]);
         
         $data = null;
-        $typeClass = null;
         if($request->type_request == 'mobil') {
             
-            $rule['mesin'] = ['required', 'string'];
-            $rule['kapasitas_penumpang'] = ['required', 'numeric'];
-            $rule['tipe'] = ['required', 'string', 'max:255'];
-            $validated = $this->validate($request, $rule);
+            $validatedMobil = $request->validate([
+                'mesin' => 'required|string',
+                'kapasitas_penumpang' => 'required|numeric',
+                'tipe' => 'required|string|max:255'
+            ]);
 
-            $data = Mobil::create($validated);
-            $typeClass = Mobil::class;
+            $data = Mobil::create($validatedMobil)->kendaraan()->create($validatedKendaraan);
         } else {
-            $rule['mesin'] = ['required', 'string'];
-            $rule['suspensi'] = ['required', 'string', 'max:255'];
-            $rule['transmisi'] = ['required', 'string', 'max:255'];
-            $validated = $this->validate($request, $rule);
+            $validatedMotor = $request->validate([
+                'mesin' => 'required|string',
+                'suspensi' => 'required|string|max:255',
+                'transmisi' => 'required|string|max:255'
+            ]);
 
-            $data = Motor::create($validated);
-            $typeClass = Motor::class;
+            $data = Motor::create($validatedMotor)->kendaraan()->create($validatedKendaraan);
         }
-
-        $kendaraan = Kendaraan::create([
-            'kendaraanable_id' => $data->id,
-            'kendaraanable_type' => $typeClass,
-            'tahun_keluaran' => $request->tahun_keluaran,
-            'warna' => $request->warna,
-            'harga' => $request->harga,
-            'status' => $request->status
-        ]);
 
         return response()->json([
             'status' => 'success',
-            'data' => $kendaraan
+            'data' => $data
         ]);
     }
 
     public function updateKendaraan(Request $request, $id)
     {
-        $kendaraan = Kendaraan::findOrFail($id);
+        //this type is for validation updating kendaraan, motor, or mobil
+        $kendaraan = Kendaraan::find($id);
+
+        if(!empty($request->type == 'kendaraan')) {
+            $validatedData = $request->validate([
+                'tahun_keluaran' => 'numeric',
+                'warna' => 'string|max:255',
+                'harga' => 'numeric',
+                'status' => 'in:available,sold'
+            ]);
+    
+    
+            $kendaraan->update($validatedData);
+    
+            return response()->json([
+                'status' => 'success',
+                'data' => $kendaraan
+            ]);
+        }
 
         if(get_class($kendaraan->kendaraanable) == Mobil::class) {
             $validatedData = $request->validate([
-                'mesin' => 'required|numeric',
-                'kapasitas_penumpang' => 'required|numeric',
-                'tipe' => 'required|string|max:255'
+                'mesin' => 'string',
+                'kapasitas_penumpang' => 'numeric',
+                'tipe' => 'string|max:255'
             ]);
 
             $kendaraan->kendaraanable->update($validatedData);
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $kendaraan
+            ]);
         }
 
-        if(get_class($kendaraan->kendaraanable) == Motor::class) {
+        if(get_class($kendaraan->kendaraanable) == Mobil::class) {
             $validatedData = $request->validate([
-                'mesin' => 'required|numeric',
-                'suspensi' => 'required|string|max:255',
-                'transmisi' => 'required|string|max:255'
+                'mesin' => 'string',
+                'suspensi' => 'string|max:255',
+                'transmisi' => 'string|max:255'
             ]);
 
             $kendaraan->kendaraanable->update($validatedData);
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $kendaraan
+            ]);
         }
-
-        $validatedData = $request->validate([
-            'tahun_keluaran' => 'required|numeric',
-            'warna' => 'required|string|max:255',
-            'harga' => 'required|numeric',
-            'status' => 'required|in:available,sold'
-        ]);
-
-
-        $kendaraan->update($validatedData);
 
         return response()->json([
-            'status' => 'success',
-            'data' => $kendaraan
-        ]);
+            'status' => 'error',
+        ], 500);
     }
 
     public function updateStatus($id)
     {
         $kendaraan = Kendaraan::findOrFail($id);
 
-        $kendaraan->update([
-            'status' => KendaraanStatusEnum::Sold
-        ]);
+        $kendaraan->status = KendaraanStatusEnum::Sold;
+        $kendaraan->save();
 
         return response()->json([
             'status' => 'success',
-            'data' => $kendaraan
+            'data' => $kendaraan,
+            'hehe' => KendaraanStatusEnum::Sold
         ]);
     }
 
     public function show($id)
     {
-        $kendaraan = Kendaraan::with('kendaraanable')->findOrFail($id);
+        $kendaraan = Kendaraan::with('kendaraanable')->find($id);
 
         return response()->json([
             'status' => 'success',
-            'data' => $kendaraan
+            'data' => empty($kendaraan) ? [] : $kendaraan
         ]);
     }
 
@@ -141,24 +149,20 @@ class KendaraanController extends Controller
         ]);
     }
 
-    public function report($start, $end)
+    public function report($date_in, $date_out)
     {
-        // formating date YYYY-MM-DD HH:MM:SS
-        // reporting dalam range waktu tertentu
-        // total kendaraan dalam range waktu tertentu
+        // formating date input dd-mm-yyyy
+        $start = DateTime::createFromFormat('d-m-Y', $date_in);
+        $end = DateTime::createFromFormat('d-m-Y', $date_out);
         $totalKendaraan = Kendaraan::whereBetween('created_at', [$start, $end])->count();
-
-        // total kendaraan yang terjual dalam range waktu tertentu
         $totalKendaraanTerjual = Kendaraan::whereBetween('created_at', [$start, $end])->where('status', KendaraanStatusEnum::Sold)->count();
-
-        // tipe kendaraan yang paling laris (mobil/motor) dalam range waktu tertentu
+        $totalMobilTerjual = Kendaraan::whereBetween('created_at', [$start, $end])->where('status', KendaraanStatusEnum::Sold)->where('kendaraanable_type', Mobil::class)->count();
+        $totalMotorTerjual = Kendaraan::whereBetween('created_at', [$start, $end])->where('status', KendaraanStatusEnum::Sold)->where('kendaraanable_type', Motor::class)->count();
+        $dominanKendaraanTerjual = $totalMobilTerjual <=> $totalMotorTerjual;
+        $dominanKendaraanTerjual = $dominanKendaraanTerjual == 0 ? 'imbang' : ($dominanKendaraanTerjual == 1 ? 'mobil' : 'motor');
         $totalMobil = Kendaraan::whereBetween('created_at', [$start, $end])->where('kendaraanable_type', Mobil::class)->count();
         $totalMotor = Kendaraan::whereBetween('created_at', [$start, $end])->where('kendaraanable_type', Motor::class)->count();
-
-        // total biaya modal dalam range waktu tertentu
         $totalBiayaModal = Kendaraan::whereBetween('created_at', [$start, $end])->sum('harga');
-
-        // total kendaraan yang terjual dalam range waktu tertentu
         $totalPendapatan = Kendaraan::whereBetween('created_at', [$start, $end])->where('status', KendaraanStatusEnum::Sold)->sum('harga');
 
         // hasil kesimpulan minus atau plus
@@ -166,12 +170,15 @@ class KendaraanController extends Controller
         return response()->json([
             'status' => 'success',
             'data' => [
-                'start date' => $start,
-                'end date' => $end,
+                'start date' => $start->format('d-m-Y'),
+                'end date' => $end->format('d-m-Y'),
                 'total_kendaraan' => $totalKendaraan,
-                'total_kendaraan_terjual' => $totalKendaraanTerjual,
                 'total_mobil' => $totalMobil,
+                'total_mobil_terjual' => $totalMobilTerjual,
                 'total_motor' => $totalMotor,
+                'total_motor_terjual' => $totalMotorTerjual,
+                'total_kendaraan_terjual' => $totalKendaraanTerjual,
+                'dominan_kendaraan_terjual' => $dominanKendaraanTerjual,
                 'total_biaya_modal' => $totalBiayaModal,
                 'total_pendapatan' => $totalPendapatan,
                 'hasil plus atau minus' => $hasil

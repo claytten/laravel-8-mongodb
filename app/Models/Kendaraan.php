@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\KendaraanStatusEnum;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Jenssegers\Mongodb\Eloquent\Model;
 use Jenssegers\Mongodb\Eloquent\SoftDeletes;
@@ -26,6 +27,15 @@ class Kendaraan extends Model
         'tahun_keluaran',
         'warna',
         'harga',
+    ];
+
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'status' => KendaraanStatusEnum::class,
     ];
 
     public function kendaraanable()
