@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\Kendaraan;
+use App\Observers\KendaraanObserver;
 use Illuminate\Foundation\AliasLoader;
 use Illuminate\Support\ServiceProvider;
 
@@ -29,5 +31,9 @@ class AppServiceProvider extends ServiceProvider
 
         // SANCTUM CUSTOM PERSONAL-ACCESS-TOKEN
         $loader->alias(\Laravel\Sanctum\PersonalAccessToken::class, \App\Models\Sanctum\PersonalAccessToken::class);
+
+        // apply observer for default status value
+        // because we use mongodb, we can't use schema default value
+        Kendaraan::observe(KendaraanObserver::class);
     }
 }
