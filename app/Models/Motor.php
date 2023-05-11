@@ -10,6 +10,8 @@ class Motor extends Model
 {
     use HasFactory, SoftDeletes;
 
+    const MotorTypeModel = 'App\\Models\\Motor';
+
     /**
      * The database table used by the model.
      *

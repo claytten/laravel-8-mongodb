@@ -3,85 +3,67 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Http\Requests\Users\LoginRequest;
+use App\Http\Requests\Users\RegisterRequest;
+use App\Services\UserService;
+use App\Traits\ResponseApiTrait;
+use Exception;
+use Illuminate\Http\Response;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
-    // Sign in
-    function login(Request $request) {
-        $request->validate([
-				'email' => 'required|email',
-				'password' => 'required',
-			]);
+	use ResponseApiTrait;
 
-			$user = User::where('email', $request->email)->first();
+	public function __construct(
+		protected UserService $userService,
+	)
+	{
+		
+	}
 
-			if (! $user || ! Hash::check($request->password, $user->password)) {
-				return response()->json([
-					'success' => false,
-          'message' => "Error Validation",
-					'data' => "The provided credentials are incorrect."
-				], 400);
-			}
+	/**
+	 * Login
+	 * @param Request $request
+	 * 
+	 * @return \Illuminate\Http\JsonResponse
+	 */
+	function login(LoginRequest $request) 
+	{
+		$data = $this->userService->login($request->all());
+		return $this->sendResponse($data, 'Login success');
+	}
 
-			return response()->json([
-				'user' => $user,
-				'access_token' => $user->createToken($request->email)->plainTextToken
-			], 200);
-    }
+	/**
+	 * Signup
+	 * @param Request $request
+	 * 
+	 * @return \Illuminate\Http\JsonResponse
+	 */
+	public function signup(RegisterRequest $request) 
+	{
+		$data = $this->userService->saveUserData($request->all());
+		return $this->sendResponse($data, 'User created successfully.', Response::HTTP_CREATED);
+	}
 
-    // Sign Up
-    public function signup(Request $request) {
-			$validator = Validator::make($request->all(), [
-				'name' => 'required',
-				'email' => 'required|email',
-				'address' => 'required',
-				'password' => 'required',
-				'confirm_password' => 'required|same:password',
-			]);
+	/**
+	 * Logout
+	 * @param Request $request
+	 * 
+	 * @return \Illuminate\Http\JsonResponse
+	 */
+	public function logout(Request $request) {
+		$request->user()->currentAccessToken()->delete();
+		return $this->sendResponse(null, 'User logout successfully.', Response::HTTP_NO_CONTENT);
+	}
 
-			if($validator->fails()){
-				return response()->json([
-					'success' => false,
-          'message' => "Error Validation",
-					'data' => $validator->errors()
-				], 400); 
-			}
-
-			$input = $request->all();
-			$input['password'] = bcrypt($input['password']);
-			
-			$user = User::create($input);
-			$success['token'] =  $user->createToken('MyAuthApp')->plainTextToken;
-			$success['name'] =  $user->name;
-
-			return response()->json([
-				'success' => true,
-				'data'    => $success,
-				'message' => 'User created successfully.',
-			], 201);
-		}
-
-    // Sign 
-    public function logout(Request $request) {
-			$request->user()->currentAccessToken()->delete();
-			return response()->json([
-				'success' => true,
-				'data'    => null,
-				'message' => 'User created successfully.',
-			], 204);
-		}
-
-    // Me
-    public function getAuthenticatedUser(Request $request) {
-			return response()->json([
-				'success' => true,
-				'data'    => $request->user(),
-				'message' => 'User created successfully.',
-			], 200);
-		}
+	/**
+	 * Get authenticated user
+	 * @param Request $request
+	 * 
+	 * @return \Illuminate\Http\JsonResponse
+	 */
+	public function getAuthenticatedUser(Request $request) {
+		return $this->sendResponse($request->user(), 'User retrieved successfully.');
+	}
 }
