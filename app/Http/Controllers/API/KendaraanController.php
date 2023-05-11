@@ -4,12 +4,12 @@ namespace App\Http\Controllers\API;
 
 use App\Enums\KendaraanStatusEnum;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Kendaraan\CreateKendaraanRequest;
 use App\Models\Kendaraan;
 use App\Models\Mobil;
 use App\Models\Motor;
 use App\Services\KendaraanService;
 use App\Traits\ResponseApiTrait;
-use Illuminate\Support\Facades\Validator;
 use DateTime;
 use Illuminate\Http\Request;
 
@@ -31,19 +31,9 @@ class KendaraanController extends Controller
         return $this->sendResponse($kendaraans, 'Kendaraan retrieved successfully.');
     }
 
-    public function store(Request $request)
+    public function store(CreateKendaraanRequest $request)
     {
         $data = $request->all();
-        $validator = Validator::make($data, [
-            'tahun_keluaran' => 'required|numeric',
-            'warna' => 'required|string|max:255',
-            'harga' => 'required|numeric',
-            'type_request' => 'required|in:mobil,motor',
-        ]);
-
-        if($validator->fails()){
-            return $this->sendError('Validation Error.', $validator->errors(), 422);
-        }
         
         $result = null;
         if($request->type_request == 'mobil') {

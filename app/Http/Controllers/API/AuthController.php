@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Users\LoginRequest;
+use App\Http\Requests\Users\RegisterRequest;
 use App\Services\UserService;
 use App\Traits\ResponseApiTrait;
 use Exception;
@@ -26,16 +28,10 @@ class AuthController extends Controller
 	 * 
 	 * @return \Illuminate\Http\JsonResponse
 	 */
-	function login(Request $request) 
+	function login(LoginRequest $request) 
 	{
-		$data = $request->all();
-
-		try {
-			$data = $this->userService->login($data);
-			return $this->sendResponse($data, 'Login success');
-		} catch(Exception $e) {
-			$this->sendError($e->getMessage(), [], $e->getCode());
-		}
+		$data = $this->userService->login($request->all());
+		return $this->sendResponse($data, 'Login success');
 	}
 
 	/**
@@ -44,16 +40,10 @@ class AuthController extends Controller
 	 * 
 	 * @return \Illuminate\Http\JsonResponse
 	 */
-	public function signup(Request $request) 
+	public function signup(RegisterRequest $request) 
 	{
-		$data = $request->all();
-
-		try {
-			$data = $this->userService->saveUserData($data);
-			return $this->sendResponse($data, 'User created successfully.', Response::HTTP_CREATED);
-		} catch(Exception $e) {
-			$this->sendError($e->getMessage(), [], $e->getCode());
-		}
+		$data = $this->userService->saveUserData($request->all());
+		return $this->sendResponse($data, 'User created successfully.', Response::HTTP_CREATED);
 	}
 
 	/**
@@ -64,11 +54,7 @@ class AuthController extends Controller
 	 */
 	public function logout(Request $request) {
 		$request->user()->currentAccessToken()->delete();
-		return response()->json([
-			'success' => true,
-			'data'    => null,
-			'message' => 'User created successfully.',
-		], 204);
+		return $this->sendResponse(null, 'User logout successfully.', Response::HTTP_NO_CONTENT);
 	}
 
 	/**
