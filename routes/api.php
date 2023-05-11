@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\API\AuthController;
+use App\Http\Controllers\API\KendaraanController;
+use App\Http\Controllers\API\PenjualanController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -19,6 +21,19 @@ Route::post('/login', [AuthController::class,'login'])->name('login');
 Route::post('/signup', [AuthController::class,'signup'])->name('signup');
 Route::middleware('auth:sanctum')->post('/logout', [AuthController::class,'logout'])->name('logout');
 Route::middleware('auth:sanctum')->get('/me', [AuthController::class,'getAuthenticatedUser'])->name('me');
+
+
+Route::group(['middleware' => ['auth:sanctum']], function () {
+  Route::group(['prefix' => 'kendaraan'], function () {
+    Route::get("/index", [KendaraanController::class, 'index'])->name('index');
+    Route::post("/store", [KendaraanController::class, 'store'])->name('store');
+    Route::put("/update/product/{id}", [KendaraanController::class, 'updateKendaraan'])->name('updateKendaraan');
+    Route::put("/update/status/{id}", [KendaraanController::class, 'updateStatus'])->name('updateStatus');
+    Route::get("/show/{id}", [KendaraanController::class, 'show'])->name('show');
+    Route::delete("/delete/{id}", [KendaraanController::class, 'destroy'])->name('destroy');
+    Route::get("/report/{start}/{end}", [KendaraanController::class, 'report'])->name('report');
+  });
+});
 
 Route::fallback(function(){
   return response()->json(['message' => 'Page Not Found'], 404);
