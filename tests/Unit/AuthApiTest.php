@@ -47,7 +47,7 @@ class AuthApiTest extends TestCase
         ]);
 
         $response->assertStatus(200);
-        $this->assertNotNull($response['access_token']);
+        $this->assertNotNull($response['data']['access_token']);
 
         Sanctum::actingAs($user, ['*']);
 
@@ -57,7 +57,7 @@ class AuthApiTest extends TestCase
         $response->assertJson([
             'success' => true,
             'data'    => $user->toArray(),
-            'message' => 'User created successfully.',
+            'message' => 'User retrieved successfully.',
         ]);
     }
 
@@ -98,7 +98,7 @@ class AuthApiTest extends TestCase
         $response->assertJson([
             'success' => true,
             'data'    => $user->toArray(),
-            'message' => 'User created successfully.',
+            'message' => 'User retrieved successfully.',
         ]);
     }
 }

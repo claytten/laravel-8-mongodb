@@ -7,147 +7,128 @@ use App\Http\Controllers\Controller;
 use App\Models\Kendaraan;
 use App\Models\Mobil;
 use App\Models\Motor;
-use Carbon\Carbon;
+use App\Services\KendaraanService;
+use App\Traits\ResponseApiTrait;
+use Illuminate\Support\Facades\Validator;
 use DateTime;
 use Illuminate\Http\Request;
 
 class KendaraanController extends Controller
 {
+    use ResponseApiTrait;
+
+    public function __construct(
+        protected KendaraanService $kendaraanService
+    )
+    {
+        
+    }
+
     public function index()
     {
         $kendaraans = Kendaraan::with('kendaraanable')->get();
 
-        return response()->json([
-            'status' => 'success',
-            'data' => $kendaraans,
-        ]);
+        return $this->sendResponse($kendaraans, 'Kendaraan retrieved successfully.');
     }
 
     public function store(Request $request)
     {
-        $validatedKendaraan = $request->validate([
+        $data = $request->all();
+        $validator = Validator::make($data, [
             'tahun_keluaran' => 'required|numeric',
             'warna' => 'required|string|max:255',
             'harga' => 'required|numeric',
+            'type_request' => 'required|in:mobil,motor',
         ]);
-        
-        $data = null;
-        if($request->type_request == 'mobil') {
-            
-            $validatedMobil = $request->validate([
-                'mesin' => 'required|string',
-                'kapasitas_penumpang' => 'required|numeric',
-                'tipe' => 'required|string|max:255'
-            ]);
 
-            $data = Mobil::create($validatedMobil)->kendaraan()->create($validatedKendaraan);
+        if($validator->fails()){
+            return $this->sendError('Validation Error.', $validator->errors(), 422);
+        }
+        
+        $result = null;
+        if($request->type_request == 'mobil') {
+            $result = $this->kendaraanService->saveMobilData($data);
         }
         if ($request->type_request == 'motor'){
-            $validatedMotor = $request->validate([
-                'mesin' => 'required|string',
-                'suspensi' => 'required|string|max:255',
-                'transmisi' => 'required|string|max:255'
-            ]);
-
-            $data = Motor::create($validatedMotor)->kendaraan()->create($validatedKendaraan);
+            $result = $this->kendaraanService->saveMotorData($data);
         }
 
-        return response()->json([
-            'status' => 'success',
-            'data' => $data
-        ]);
+        return $this->sendResponse($result, 'Kendaraan created successfully.');
     }
 
     public function updateKendaraan(Request $request, $id)
     {
-        //this type is for validation updating kendaraan, motor, or mobil
         $kendaraan = Kendaraan::find($id);
+        $data = $request->all();
 
         if(!empty($request->type == 'kendaraan')) {
-            $validatedData = $request->validate([
-                'tahun_keluaran' => 'numeric',
-                'warna' => 'string|max:255',
-                'harga' => 'numeric',
-                'status' => 'in:available,sold'
-            ]);
-    
-    
-            $kendaraan->update($validatedData);
-    
-            return response()->json([
-                'status' => 'success',
-                'data' => $kendaraan
-            ]);
+            try {
+                $result = $this->kendaraanService->updateKendaraan($data, $id);
+                return $this->sendResponse($result, 'Kendaraan updated successfully.');
+            } catch (\Throwable $th) {
+                return $this->sendError('Kendaraan not found.', $th->getMessage(), 404);
+            }
         }
 
-        if(get_class($kendaraan->kendaraanable) == 'App\\Models\\Mobil') {
-            $validatedData = $request->validate([
-                'mesin' => 'string',
-                'kapasitas_penumpang' => 'numeric',
-                'tipe' => 'string|max:255'
-            ]);
-
-            $kendaraan->kendaraanable->update($validatedData);
-
-            return response()->json([
-                'status' => 'success',
-                'data' => $kendaraan
-            ]);
+        if(get_class($kendaraan->kendaraanable) == Mobil::MobilTypeModel) {
+            try {
+                $result = $this->kendaraanService->updateKendaraanSpesific($data, $kendaraan, [
+                    'mesin' => 'string',
+                    'kapasitas_penumpang' => 'numeric',
+                    'tipe' => 'string|max:255'
+                ]);
+                return $this->sendResponse($result, 'Mobil updated successfully.');
+            } catch (\Throwable $th) {
+                return $this->sendError('Mobil not found.', $th->getMessage(), 404);
+            }
         }
 
-        if(get_class($kendaraan->kendaraanable) == 'App\\Models\\Motor') {
-            $validatedData = $request->validate([
-                'mesin' => 'string',
-                'suspensi' => 'string|max:255',
-                'transmisi' => 'string|max:255'
-            ]);
-
-            $kendaraan->kendaraanable->update($validatedData);
-
-            return response()->json([
-                'status' => 'success',
-                'data' => $kendaraan
-            ]);
+        if(get_class($kendaraan->kendaraanable) == Motor::MotorTypeModel) {
+            try {
+                $result = $this->kendaraanService->updateKendaraanSpesific($data, $kendaraan, [
+                    'mesin' => 'string',
+                    'suspensi' => 'string|max:255',
+                    'transmisi' => 'string|max:255'
+                ]);
+                return $this->sendResponse($result, 'Motor updated successfully.');
+            } catch (\Throwable $th) {
+                return $this->sendError('Motor not found.', $th->getMessage(), 404);
+            }
         }
 
-        return response()->json([
-            'status' => 'error',
-        ], 500);
+        return $this->sendError('Kendaraan not found.', 'Kendaraan not found.', 404);
     }
 
     public function updateStatus($id)
     {
-        $kendaraan = Kendaraan::findOrFail($id);
-
-        $kendaraan->status = KendaraanStatusEnum::Sold;
-        $kendaraan->save();
-
-        return response()->json([
-            'status' => 'success',
-            'data' => $kendaraan,
-            'hehe' => KendaraanStatusEnum::Sold
-        ]);
+        try {
+            $result = $this->kendaraanService->updateStatusKendaraan($id);
+            return $this->sendResponse($result, 'Kendaraan updated successfully.');
+        } catch (\Throwable $th) {
+            return $this->sendError('Kendaraan not found.', $th->getMessage(), 404);
+        }
     }
 
     public function show($id)
     {
         $kendaraan = Kendaraan::with('kendaraanable')->find($id);
 
-        return response()->json([
-            'status' => 'success',
-            'data' => empty($kendaraan) ? [] : $kendaraan
-        ]);
+        if (empty($kendaraan)) {
+            return $this->sendError('Kendaraan not found.');
+        }
+
+        return $this->sendResponse($kendaraan, 'Kendaraan retrieved successfully.');
     }
 
     public function destroy($id)
     {
-        $kendaraan = Kendaraan::findOrFail($id);
+        $kendaraan = Kendaraan::with('kendaraanable')->find($id);
+        if (empty($kendaraan)) {
+            return $this->sendError('Kendaraan not found.');
+        }
         $kendaraan->delete();
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Kendaraan berhasil dihapus'
-        ]);
+        return $this->sendResponse($kendaraan, 'Kendaraan deleted successfully.');
     }
 
     public function report($date_in, $date_out)
@@ -155,35 +136,12 @@ class KendaraanController extends Controller
         // formating date input dd-mm-yyyy
         $start = DateTime::createFromFormat('d-m-Y', $date_in);
         $end = DateTime::createFromFormat('d-m-Y', $date_out);
-        $totalKendaraan = Kendaraan::whereBetween('created_at', [$start, $end])->count();
-        $totalKendaraanTerjual = Kendaraan::whereBetween('created_at', [$start, $end])->where('status', KendaraanStatusEnum::Sold)->count();
-        $totalMobilTerjual = Kendaraan::whereBetween('created_at', [$start, $end])->where('status', KendaraanStatusEnum::Sold)->where('kendaraanable_type', Mobil::class)->count();
-        $totalMotorTerjual = Kendaraan::whereBetween('created_at', [$start, $end])->where('status', KendaraanStatusEnum::Sold)->where('kendaraanable_type', Motor::class)->count();
-        $dominanKendaraanTerjual = $totalMobilTerjual <=> $totalMotorTerjual;
-        $dominanKendaraanTerjual = $dominanKendaraanTerjual == 0 ? 'imbang' : ($dominanKendaraanTerjual == 1 ? 'mobil' : 'motor');
-        $totalMobil = Kendaraan::whereBetween('created_at', [$start, $end])->where('kendaraanable_type', Mobil::class)->count();
-        $totalMotor = Kendaraan::whereBetween('created_at', [$start, $end])->where('kendaraanable_type', Motor::class)->count();
-        $totalBiayaModal = Kendaraan::whereBetween('created_at', [$start, $end])->sum('harga');
-        $totalPendapatan = Kendaraan::whereBetween('created_at', [$start, $end])->where('status', KendaraanStatusEnum::Sold)->sum('harga');
 
-        // hasil kesimpulan minus atau plus
-        $hasil = $totalPendapatan - $totalBiayaModal;
-        return response()->json([
-            'status' => 'success',
-            'data' => [
-                'start date' => $start->format('d-m-Y'),
-                'end date' => $end->format('d-m-Y'),
-                'total_kendaraan' => $totalKendaraan,
-                'total_mobil' => $totalMobil,
-                'total_mobil_terjual' => $totalMobilTerjual,
-                'total_motor' => $totalMotor,
-                'total_motor_terjual' => $totalMotorTerjual,
-                'total_kendaraan_terjual' => $totalKendaraanTerjual,
-                'dominan_kendaraan_terjual' => $dominanKendaraanTerjual,
-                'total_biaya_modal' => $totalBiayaModal,
-                'total_pendapatan' => $totalPendapatan,
-                'hasil plus atau minus' => $hasil
-            ]
-        ]);
+        try {
+            $result = $this->kendaraanService->reportKendaraan($start, $end);
+            return $this->sendResponse($result, 'Kendaraan report successfully.');
+        } catch (\Throwable $th) {
+            return $this->sendError('Kendaraan not found.', $th->getMessage(), 404);
+        }
     }
 }

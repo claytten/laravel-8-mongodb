@@ -10,6 +10,8 @@ class Mobil extends Model
 {
     use HasFactory, SoftDeletes;
 
+    const MobilTypeModel = 'App\\Models\\Mobil';
+
     /**
      * The database table used by the model.
      *
