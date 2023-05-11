@@ -41,7 +41,8 @@ class KendaraanController extends Controller
             ]);
 
             $data = Mobil::create($validatedMobil)->kendaraan()->create($validatedKendaraan);
-        } else {
+        }
+        if ($request->type_request == 'motor'){
             $validatedMotor = $request->validate([
                 'mesin' => 'required|string',
                 'suspensi' => 'required|string|max:255',
@@ -79,7 +80,7 @@ class KendaraanController extends Controller
             ]);
         }
 
-        if(get_class($kendaraan->kendaraanable) == Mobil::class) {
+        if(get_class($kendaraan->kendaraanable) == 'App\\Models\\Mobil') {
             $validatedData = $request->validate([
                 'mesin' => 'string',
                 'kapasitas_penumpang' => 'numeric',
@@ -94,7 +95,7 @@ class KendaraanController extends Controller
             ]);
         }
 
-        if(get_class($kendaraan->kendaraanable) == Mobil::class) {
+        if(get_class($kendaraan->kendaraanable) == 'App\\Models\\Motor') {
             $validatedData = $request->validate([
                 'mesin' => 'string',
                 'suspensi' => 'string|max:255',
